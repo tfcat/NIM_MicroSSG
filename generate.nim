@@ -8,7 +8,7 @@ if paramCount() == 0:
     die "Not enough arguments"
 
 let ddir = paramStr(1)
-let workingDirectory = join([getAppDir(), "/", ddir, "/"]);
+let workingDirectory = join([getCurrentDir(), "/", ddir, "/"]);
 
 # check directory
 if not dirExists(workingDirectory):
