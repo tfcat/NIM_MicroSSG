@@ -31,8 +31,8 @@ proc scanAndInsert(filePath : string, safetyIterCount : int = 0): string =
             if fileExists(join([workingDirectory, "/", captures[1]])):
                 fileToRead = join([workingDirectory, "/", captures[1]])
 
-            if fileExists(join([workingDirectory, "/_includes/", captures[1]])) : 
-                fileToRead = join([workingDirectory, "/_includes/", captures[1]])
+            if fileExists(join([workingDirectory, "/_include/", captures[1]])) : 
+                fileToRead = join([workingDirectory, "/_include/", captures[1]])
 
             if fileToRead != "":
                 result = replace(result, match.match, scanAndInsert(fileToRead, safetyIterCount+1))
@@ -40,17 +40,26 @@ proc scanAndInsert(filePath : string, safetyIterCount : int = 0): string =
     return result
 
 # process each of these files as long as file path doesnt contain _result
-for file in walkDir(workingDirectory):
-    if not contains(file.path, "_result") and not contains(file.path, "_includes"):
-        # process file and copy it to result
-        let relFileName = replace(file.path, workingDirectory, "")
-        echo join(["Compiling: ", relFileName])
-        
-        if not dirExists(join([workingDirectory, "_result/"])):
-            createDir(join([workingDirectory, "_result/"]))
+proc processDir(dir : string): void =
+    for file in walkDir(dir):
+        if not contains(file.path, "_result") and not contains(file.path, "_include"):
+            # process file and copy it to result
+            let relFileName = replace(file.path, workingDirectory, "")
             
-        writeFile(
-            join([workingDirectory, "_result/", replace(file.path, workingDirectory, "")]), 
-            scanAndInsert(file.path))
+            if not dirExists(join([workingDirectory, "_result/"])):
+                createDir(join([workingDirectory, "_result/"]))
+            
+            var filePath = join([workingDirectory, "_result/", relFileName])
+            
+            if contains(relFileName, ".html"):
+                echo join(["Compiling: ", relFileName])
+                writeFile(filePath, scanAndInsert(file.path))
+            elif not dirExists(file.path):
+                copyFile(filePath, file.path)
+            else:
+                createDir(filePath)
+                processDir(file.path)
+
+processDir(workingDirectory)
 
 echo "done!"
