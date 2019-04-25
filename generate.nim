@@ -41,13 +41,13 @@ proc scanAndInsert(filePath : string, safetyIterCount : int = 0): string =
 
 # process each of these files as long as file path doesnt contain _result
 proc processDir(dir : string): void =
+    if not dirExists(join([workingDirectory, "_result/"])):
+        createDir(join([workingDirectory, "_result/"]))
+
     for file in walkDir(dir):
         if not contains(file.path, "_result") and not contains(file.path, "_include"):
             # process file and copy it to result
             let relFileName = replace(file.path, workingDirectory, "")
-            
-            if not dirExists(join([workingDirectory, "_result/"])):
-                createDir(join([workingDirectory, "_result/"]))
             
             var filePath = join([workingDirectory, "_result/", relFileName])
             
@@ -55,7 +55,7 @@ proc processDir(dir : string): void =
                 echo join(["Compiling: ", relFileName])
                 writeFile(filePath, scanAndInsert(file.path))
             elif not dirExists(file.path):
-                copyFile(filePath, file.path)
+                copyFile(file.path, filePath)
             else:
                 createDir(filePath)
                 processDir(file.path)
